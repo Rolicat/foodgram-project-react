@@ -1,6 +1,6 @@
 from django_filters.rest_framework import (
     FilterSet, CharFilter, BooleanFilter, ModelChoiceFilter,
-    )
+)
 
 from app.models import Recipe
 from users.models import User

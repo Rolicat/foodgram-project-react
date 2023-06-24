@@ -3,7 +3,7 @@ from django.contrib import admin
 from app.models import (
     Ingredient, Tag, Recipe, TagList, Сomposition,
     ShoppingCart, Favorite,
-    )
+)
 from app.constants import EMPTY_FIELD_VALUE
 
 

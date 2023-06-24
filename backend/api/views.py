@@ -97,7 +97,7 @@ class SubscribesViewSet(viewsets.GenericViewSet,
         return Response(
             'Успешная отписка',
             status=status.HTTP_204_NO_CONTENT
-            )
+        )
 
 
 class RecipeViewSet(viewsets.ModelViewSet):

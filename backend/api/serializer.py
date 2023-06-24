@@ -139,7 +139,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
     cooking_time = serializers.IntegerField(
         source='recipe.cooking_time',
         read_only=True,
-        )
+    )
 
     class Meta:
         model = Favorite
@@ -157,7 +157,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     cooking_time = serializers.IntegerField(
         source='recipe.cooking_time',
         read_only=True,
-        )
+    )
 
     class Meta:
         model = ShoppingCart
@@ -177,7 +177,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
         source='composition',
         many=True,
         required=True,
-        )
+    )
 
     def get_is_favorited(self, recipe):
         """Рецепт в избранном или нет."""
@@ -199,7 +199,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
             'id', 'tags', 'author', 'ingredients',
             'is_favorited', 'is_in_shopping_cart',
             'name', 'image', 'text', 'cooking_time',
-            )
+        )
         read_only_fields = ('author',)
 
 
@@ -210,7 +210,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         required=True,
         many=True,
         queryset=Tag.objects.all(),
-        )
+    )
     ingredients = serializers.ListField(
        child=serializers.DictField(required=True),
        required=True,
@@ -226,7 +226,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             [TagList(
                 recipe=recipe,
                 tag=tag
-                ) for tag in tags]
+            ) for tag in tags]
         )
         Сomposition.objects.bulk_create(
             [Сomposition(
@@ -234,9 +234,9 @@ class RecipeSerializer(serializers.ModelSerializer):
                 ingredient=get_object_or_404(
                     Ingredient,
                     pk=ingredient_info['id']
-                    ),
+                ),
                 amount=ingredient_info['amount'],
-                ) for ingredient_info in ingredients]
+            ) for ingredient_info in ingredients]
         )
         return recipe
 
@@ -245,7 +245,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         fields = (
             'tags', 'author', 'ingredients',
             'name', 'image', 'text', 'cooking_time',
-            )
+        )
         read_only_fields = ('author',)
 
 
@@ -280,4 +280,4 @@ class SubscriptionsSerializer(CustomUsersSerializer):
             'username', 'email', 'first_name',
             'last_name', 'id', 'is_subscribed',
             'recipes', 'recipes_count',
-            )
+        )

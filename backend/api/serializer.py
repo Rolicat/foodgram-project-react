@@ -72,6 +72,8 @@ class CustomUsersSerializer(UserSerializer):
         """Получаем информацию о подписи на пользователя."""
         # Из api не ясно - выводим, что мы подписаны на кого-то
         # или что он на нас подписан. Считаем, что мы подписаны.
+        if self.context['request'].user.is_anonymous:
+            return False
         return obj.following.filter(user=self.context['request'].user).exists()
 
 
@@ -179,11 +181,15 @@ class RecipeListSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, recipe):
         """Рецепт в избранном или нет."""
+        if self.context['request'].user.is_anonymous:
+            return False
         user = self.context['request'].user
         return recipe.is_favorited.filter(user=user).exists()
 
     def get_is_in_shopping_cart(self, recipe):
         """Рецепт в корзине или нет."""
+        if self.context['request'].user.is_anonymous:
+            return False
         user = self.context['request'].user
         return recipe.is_in_shopping_cart.filter(user=user).exists()
 

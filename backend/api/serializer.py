@@ -24,7 +24,7 @@ class CustomUserCreate(UserCreateSerializer):
         fields = (
             'first_name', 'last_name', 'username',
             'email', 'password', 'id',
-            )
+        )
 
 
 class CustomLoginSerializer(TokenObtainPairSerializer):
@@ -65,7 +65,7 @@ class CustomUsersSerializer(UserSerializer):
         fields = (
             'username', 'email', 'first_name',
             'last_name', 'id', 'is_subscribed',
-            )
+        )
         read_only_fields = ('is_subscribed',)
 
     def get_is_subscribed(self, obj):
@@ -100,7 +100,7 @@ class CompositionSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='ingredient.name')
     measurement_unit = serializers.CharField(
         source='ingredient.measurement_unit'
-        )
+    )
     id = serializers.IntegerField(source='ingredient.id')
 
     class Meta:

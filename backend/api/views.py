@@ -78,7 +78,7 @@ class SubscribesViewSet(viewsets.GenericViewSet,
             return Response(
                 'Ошибка подписки',
                 status=status.HTTP_400_BAD_REQUEST
-                )
+            )
         Follow.objects.create(user=request.user, author=author)
         serializer = self.get_serializer(author)
         return Response(serializer.data)
@@ -92,7 +92,7 @@ class SubscribesViewSet(viewsets.GenericViewSet,
             return Response(
                 'Ошибка отписки',
                 status=status.HTTP_400_BAD_REQUEST
-                )
+            )
         queryset.delete()
         return Response(
             'Успешная отписка',
@@ -117,7 +117,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(
                 'Не достаточно прав',
                 status=status.HTTP_403_FORBIDDEN,
-                )
+            )
         return super().destroy(request, *args, **kwargs)
 
     def get_serializer_class(self):
@@ -211,12 +211,12 @@ class ShoppingCartViewSet(viewsets.GenericViewSet,
         queryset = ShoppingCart.objects.filter(
             user=request.user,
             recipe=recipe
-            )
+        )
         if queryset.exists():
             return Response(
                 'Рецепт уже в списке покупок',
                 status=status.HTTP_400_BAD_REQUEST
-                )
+            )
         return super().create(request, *args, **kwargs)
 
     @action(methods=('delete',), detail=False)
@@ -224,14 +224,14 @@ class ShoppingCartViewSet(viewsets.GenericViewSet,
         queryset = ShoppingCart.objects.filter(
             user=request.user,
             recipe=kwargs['id'],
-            )
+        )
         if not queryset.exists():
             return Response(
                 'Рецепта нет в списке покупок',
                 status=status.HTTP_400_BAD_REQUEST
-                )
+            )
         queryset.delete()
         return Response(
             'Рецепт удален из корзины',
             status=status.HTTP_204_NO_CONTENT
-            )
+        )

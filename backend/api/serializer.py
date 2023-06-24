@@ -212,9 +212,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all(),
     )
     ingredients = serializers.ListField(
-       child=serializers.DictField(required=True),
-       required=True,
-       write_only=True,
+        child=serializers.DictField(required=True),
+        required=True,
+        write_only=True,
     )
 
     def create(self, validated_data):

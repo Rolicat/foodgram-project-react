@@ -1,6 +1,7 @@
 from django.db import models
-from django.core import validators
 from users.models import User
+from foodgram_backend.settings import VALIDATORS
+from colorfield.fields import ColorField
 
 
 class Ingredient(models.Model):
@@ -28,10 +29,10 @@ class Tag(models.Model):
         verbose_name='Название тега',
         help_text='Название тега',
     )
-    color = models.CharField(
-        max_length=7,
+    color = ColorField(
         verbose_name='цвет в hex формате',
         help_text='цвет в hex формате',
+        default='#FFFFFF',
     )
     slug = models.SlugField(
         verbose_name='Сокращенное название',
@@ -48,7 +49,7 @@ class Tag(models.Model):
 class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient,
-        through='Сomposition',
+        through='Composition',
         verbose_name='Ингредиенты',
         help_text='Ингредиенты',
     )
@@ -72,8 +73,8 @@ class Recipe(models.Model):
         verbose_name='Описание',
         help_text='Описание',
     )
-    cooking_time = models.IntegerField(
-        validators=(validators.MinValueValidator(1),),
+    cooking_time = models.PositiveSmallIntegerField(
+        validators=(VALIDATORS['more_than_one'],),
         verbose_name='Время приготовления (в минутах)',
         help_text='Время приготовления (в минутах)',
     )
@@ -97,7 +98,7 @@ class Recipe(models.Model):
         return f'{self.name} (время готовки:{self.cooking_time})'
 
 
-class Сomposition(models.Model):
+class Composition(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -108,10 +109,10 @@ class Сomposition(models.Model):
         on_delete=models.CASCADE,
         related_name='composition',
     )
-    amount = models.PositiveIntegerField(
+    amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
         help_text='Количество',
-        validators=(validators.MinValueValidator(0),),
+        validators=(VALIDATORS['more_than_one'],),
     )
 
     class Meta:

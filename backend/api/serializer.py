@@ -13,7 +13,7 @@ from users.models import User
 from app.models import (
     Recipe, Ingredient, Tag,
     Favorite, ShoppingCart, TagList,
-    Сomposition,
+    Composition,
 )
 
 
@@ -44,6 +44,10 @@ class CustomLogoutSerializer(TokenObtainPairSerializer):
     Мы просто подменяем токен на другой.
     """
     def validate(self, attrs):
+        """
+        Осуществляем выдачу нового токена, но данные
+        не возвращаем, чтобы пользователь больше не мог зайти.
+        """
         super().validate(attrs)
         return None
 
@@ -80,11 +84,12 @@ class CustomUsersSerializer(UserSerializer):
 class ProfileSerializer(CustomUsersSerializer):
     """Сериализатор для профиля зарегистрированного пользователя."""
 
-    class Meta(CustomUsersSerializer.Meta):
-        ...
-
     def get_is_subscribed(self, obj):
-        """У текущего профиля всегда нет подписи на самого себя."""
+        """
+        У текущего профиля всегда нет подписи на самого себя.
+        Всегда возвращаем False, чтобы не просчитывать наличие подписки.
+        Этот сериализатор используется для @action 'me'.
+        """
         return False
 
 
@@ -104,7 +109,7 @@ class CompositionSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='ingredient.id')
 
     class Meta:
-        model = Сomposition
+        model = Composition
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
@@ -228,8 +233,8 @@ class RecipeSerializer(serializers.ModelSerializer):
                 tag=tag
             ) for tag in tags]
         )
-        Сomposition.objects.bulk_create(
-            [Сomposition(
+        Composition.objects.bulk_create(
+            [Composition(
                 recipe=recipe,
                 ingredient=get_object_or_404(
                     Ingredient,

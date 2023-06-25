@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from app.models import (
-    Ingredient, Tag, Recipe, TagList, Сomposition,
+    Ingredient, Tag, Recipe, TagList, Composition,
     ShoppingCart, Favorite,
 )
 from app.constants import EMPTY_FIELD_VALUE
@@ -59,7 +59,7 @@ class FavoriteAdmin(admin.ModelAdmin):
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag, TagAdmin)
-admin.site.register(Сomposition, CompositionAdmin)
+admin.site.register(Composition, CompositionAdmin)
 admin.site.register(TagList, TagListAdmin)
 admin.site.register(ShoppingCart, ShoppingCartAdmin)
 admin.site.register(Favorite, FavoriteAdmin)

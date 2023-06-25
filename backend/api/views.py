@@ -20,9 +20,8 @@ from api.serializer import (
 )
 from users.models import User, Follow
 from app.models import (
-    Recipe, Ingredient, Tag, Favorite, ShoppingCart, Сomposition
+    Recipe, Ingredient, Tag, Favorite, ShoppingCart, Composition
 )
-from api.pagination import SubscribersPagination
 from api.filters import RecipeFilter
 
 
@@ -59,7 +58,7 @@ class CustomUsersViewSet(UserViewSet):
             return SubscriptionsSerializer
         return super().get_serializer_class()
 
-    @action(methods=['get'], detail=False)
+    @action(methods=('get',), detail=False)
     def subscriptions(self, request):
         """Подписки пользователя."""
         queryset = User.objects.filter(following__user=request.user).all()
@@ -76,7 +75,6 @@ class SubscribesViewSet(viewsets.GenericViewSet,
     queryset = User.objects.all()
     serializer_class = SubscriptionsSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    pagination_class = SubscribersPagination
 
     def create(self, request, *args, **kwargs):
         """Подписаться на пользователя."""
@@ -91,7 +89,7 @@ class SubscribesViewSet(viewsets.GenericViewSet,
         serializer = self.get_serializer(author)
         return Response(serializer.data)
 
-    @action(methods=['delete'], detail=False)
+    @action(methods=('delete',), detail=False)
     def delete(self, request, *args, **kwargs):
         """Отписаться от пользователя."""
         author = get_object_or_404(User, pk=kwargs['id'])
@@ -117,9 +115,27 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.AllowAny, )
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        """Возвращаем полученный рецепт."""
+        return serializer.save(author=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        """Создаем рецепт с подменой сериализатора на возврат."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        serializer = RecipeListSerializer(
+            instance=instance,
+            context={'request': request},
+        )
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
     def destroy(self, request, *args, **kwargs):
+        """Удаляем рецепт"""
         instance = self.get_object()
         if self.request.user != instance.author:
             return Response(
@@ -129,11 +145,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
     def get_serializer_class(self):
+        """Меняем сериализатор в зависимости от запроса."""
         if self.action in ['list', 'retrieve']:
             return RecipeListSerializer
         return RecipeSerializer
 
-    @action(methods=['get'], detail=False)
+    @action(methods=('get',), detail=False)
     def download_shopping_cart(self, request):
         """Список покупок в формате pdf."""
         if request.user.is_anonymous:
@@ -141,7 +158,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 'Вы не авторизованы',
                 status=status.HTTP_403_FORBIDDEN
             )
-        shopping_cart = Сomposition.objects.filter(
+        shopping_cart = Composition.objects.filter(
             recipe__is_in_shopping_cart__user=request.user
         ).values(
             'ingredient__name', 'ingredient__measurement_unit'

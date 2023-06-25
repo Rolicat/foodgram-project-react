@@ -4,6 +4,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.shortcuts import get_object_or_404
+from django.http import FileResponse
+from django.db.models import Sum
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import io
 from rest_framework.decorators import action
 
 from api.serializer import (
@@ -13,7 +19,9 @@ from api.serializer import (
     FavoriteSerializer, ShoppingCartSerializer, SubscriptionsSerializer,
 )
 from users.models import User, Follow
-from app.models import Recipe, Ingredient, Tag, Favorite, ShoppingCart
+from app.models import (
+    Recipe, Ingredient, Tag, Favorite, ShoppingCart, Сomposition
+)
 from api.pagination import SubscribersPagination
 from api.filters import RecipeFilter
 
@@ -128,8 +136,37 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(methods=['get'], detail=False)
     def download_shopping_cart(self, request):
         """Список покупок в формате pdf."""
-        shopping_cart = ShoppingCart.objects.filter(user=request.user)
-        return Response(shopping_cart)
+        if request.user.is_anonymous:
+            return Response(
+                'Вы не авторизованы',
+                status=status.HTTP_403_FORBIDDEN
+            )
+        shopping_cart = Сomposition.objects.filter(
+            recipe__is_in_shopping_cart__user=request.user
+        ).values(
+            'ingredient__name', 'ingredient__measurement_unit'
+        ).annotate(amount=Sum('amount'))
+        buffer = io.BytesIO()
+        pdfmetrics.registerFont(
+            TTFont('Liberation Serif', 'LiberationSerif-Regular.ttf')
+        )
+        pdf = canvas.Canvas(buffer)
+        pdf.setFont("Liberation Serif", 14)
+        pdf.drawString(200, 800, 'СПИСОК ПОКУПОК')
+        y_position = 750
+        for shopping_ingredient in shopping_cart:
+            pdf.drawString(
+                100,
+                y_position,
+                (f'{shopping_ingredient["ingredient__name"]} '
+                 f'({shopping_ingredient["ingredient__measurement_unit"]})'
+                 f' - [{shopping_ingredient["amount"]}]')
+            )
+            y_position -= 30
+        pdf.showPage()
+        pdf.save()
+        buffer.seek(0)
+        return FileResponse(buffer, as_attachment=True, filename="Покупки.pdf")
 
 
 class IngredientViewSet(viewsets.GenericViewSet,

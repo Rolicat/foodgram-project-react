@@ -22,6 +22,7 @@ from users.models import User, Follow
 from app.models import (
     Recipe, Ingredient, Tag, Favorite, ShoppingCart, Composition
 )
+from api.permission import IsAuthor
 from api.filters import RecipeFilter
 
 
@@ -47,6 +48,8 @@ class CustomUsersViewSet(UserViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return CustomUserCreate
+        # Подставляем сериализатор профиля только, если
+        # идет обращение к url 'users/me'
         elif (self.action == 'me'
               and self.request
               and self.request.method == 'GET'
@@ -112,7 +115,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeListSerializer
     filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
-    permission_classes = (permissions.AllowAny, )
+    permission_classes = (permissions.AllowAny, IsAuthor)
+    http_method_names = ('get', 'post', 'delete', 'patch')
 
     def perform_create(self, serializer):
         """Возвращаем полученный рецепт."""
@@ -134,19 +138,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             headers=headers
         )
 
-    def destroy(self, request, *args, **kwargs):
-        """Удаляем рецепт"""
-        instance = self.get_object()
-        if self.request.user != instance.author:
-            return Response(
-                'Не достаточно прав',
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        return super().destroy(request, *args, **kwargs)
-
     def get_serializer_class(self):
         """Меняем сериализатор в зависимости от запроса."""
-        if self.action in ['list', 'retrieve']:
+        if self.action in ('list', 'retrieve'):
             return RecipeListSerializer
         return RecipeSerializer
 

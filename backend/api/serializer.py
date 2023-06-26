@@ -222,6 +222,36 @@ class RecipeSerializer(serializers.ModelSerializer):
         write_only=True,
     )
 
+    def validate_cooking_time(self, cooking_time: int):
+        if cooking_time < 1:
+            raise serializers.ValidationError(
+                'Время готовки не может быть менее 1 минуты'
+            )
+        return cooking_time
+
+    def validate_ingredients(self, ingredients: list):
+        """Проверим количество ингредиентов и их повторяемость."""
+        if not isinstance(ingredients, list):
+            raise serializers.ValidationError(
+                'Не корректное значение списка ингредиентов'
+            )
+        if not len(ingredients):
+            raise serializers.ValidationError(
+                'Не указан ни один ингредиент для рецепта'
+            )
+        reply_check = {}
+        for ingredient in ingredients:
+            if ingredient['id'] in reply_check:
+                raise serializers.ValidationError(
+                    'В рецепте есть повторяющиеся ингредиенты'
+                )
+            reply_check[ingredient['id']] = ingredient['amount']
+            if ingredient['amount'] < 1:
+                raise serializers.ValidationError(
+                    'Количество ингредиентов не может быть меньше 1'
+                )
+        return ingredients
+
     def create(self, validated_data):
         """Создание рецепта."""
         tags = validated_data.pop('tags')

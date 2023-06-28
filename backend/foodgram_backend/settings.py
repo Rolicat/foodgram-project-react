@@ -161,11 +161,21 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
    'ACCESS_TOKEN_LIFETIME': timedelta(days=100),
-   'AUTH_HEADER_TYPES': ('Bearer',),
+   'AUTH_HEADER_TYPES': ('Token',),
 } 
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
+    'SERIALIZERS': {
+        'user_create': 'api.serializersCustomUsersSerializer',
+        'user': 'api.serializer.CustomUsersSerializer',
+        'current_user': 'api.serializer.CustomUsersSerializer',
+        'user_delete': 'api.serializer.CustomUsersSerializer',
+    },
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.IsAuthenticated'],
+        'user_list': ['rest_framework.permissions.AllowAny'],
+    }
 }
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

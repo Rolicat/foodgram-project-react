@@ -46,7 +46,7 @@ services:
     # Сбилдить и запустить образ, 
     # описанный в Dockerfile в папке gateway
     restart: always
-    image: rolicat/frontend_gateway:latest
+    image: rolicat/foodgram_gateway:latest
     volumes:
       - static:/staticfiles/
       - media:/media/

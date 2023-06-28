@@ -166,17 +166,8 @@ SIMPLE_JWT = {
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
-    'SERIALIZERS': {
-        'user_create': 'api.serializersCustomUsersSerializer',
-        'user': 'api.serializer.CustomUsersSerializer',
-        'current_user': 'api.serializer.CustomUsersSerializer',
-        'user_delete': 'api.serializer.CustomUsersSerializer',
-    },
-    'PERMISSIONS': {
-        'user': ['rest_framework.permissions.IsAuthenticated'],
-        'user_list': ['rest_framework.permissions.AllowAny'],
-    }
 }
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'

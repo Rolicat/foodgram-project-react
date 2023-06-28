@@ -1,3 +1,5 @@
+import base64
+
 from rest_framework.validators import UniqueValidator
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -6,7 +8,6 @@ from django.shortcuts import get_object_or_404
 from djoser.serializers import (
     UserSerializer, UserCreateSerializer
 )
-import base64
 
 from users.validators import UsernameRegexValidator
 from users.models import User
@@ -15,6 +16,7 @@ from app.models import (
     Favorite, ShoppingCart, TagList,
     Composition,
 )
+from foodgram_backend.settings import MIN_AMOUNT, MIN_COOKING_TIME
 
 
 class CustomUserCreate(UserCreateSerializer):
@@ -36,20 +38,6 @@ class CustomLoginSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         data = {'auth_token': data['access']}
         return data
-
-
-class CustomLogoutSerializer(TokenObtainPairSerializer):
-    """
-    Сериализатор для выхода из приложения.
-    Мы просто подменяем токен на другой.
-    """
-    def validate(self, attrs):
-        """
-        Осуществляем выдачу нового токена, но данные
-        не возвращаем, чтобы пользователь больше не мог зайти.
-        """
-        super().validate(attrs)
-        return None
 
 
 class CustomUsersSerializer(UserSerializer):
@@ -74,8 +62,6 @@ class CustomUsersSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         """Получаем информацию о подписи на пользователя."""
-        # Из api не ясно - выводим, что мы подписаны на кого-то
-        # или что он на нас подписан. Считаем, что мы подписаны.
         if self.context['request'].user.is_anonymous:
             return False
         return obj.following.filter(user=self.context['request'].user).exists()
@@ -223,9 +209,9 @@ class RecipeSerializer(serializers.ModelSerializer):
     )
 
     def validate_cooking_time(self, cooking_time: int):
-        if cooking_time < 1:
+        if cooking_time < MIN_COOKING_TIME:
             raise serializers.ValidationError(
-                'Время готовки не может быть менее 1 минуты'
+                f'Время готовки не может быть менее {MIN_COOKING_TIME} минуты'
             )
         return cooking_time
 
@@ -246,9 +232,10 @@ class RecipeSerializer(serializers.ModelSerializer):
                     'В рецепте есть повторяющиеся ингредиенты'
                 )
             reply_check[ingredient['id']] = ingredient['amount']
-            if ingredient['amount'] < 1:
+            if ingredient['amount'] < MIN_AMOUNT:
                 raise serializers.ValidationError(
-                    'Количество ингредиентов не может быть меньше 1'
+                    f'Количество ингредиентов не может '
+                    f'быть меньше {MIN_AMOUNT}'
                 )
         return ingredients
 

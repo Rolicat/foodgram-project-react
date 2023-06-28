@@ -14,14 +14,14 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
-from django.core import validators
+
 from dotenv import load_dotenv
 
-load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv(dotenv_path=BASE_DIR.parent / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_filters',
     'rest_framework',
+    'rest_framework.authtoken',
     'djoser',
     'colorfield',
     'users',
@@ -89,20 +90,14 @@ WSGI_APPLICATION = 'foodgram_backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-"""DATABASES = {
-    'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('POSTGRES_DB', 'django'),
         'USER': os.getenv('POSTGRES_USER', 'django'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', ''),
-        'PORT': os.getenv('DB_PORT', 5432)    }
-}"""
+        'PORT': os.getenv('DB_PORT', 5432)
+    }
+}
 
 
 # Password validation
@@ -147,7 +142,7 @@ MEDIA_URL = '/media/'
 
 STATIC_ROOT = BASE_DIR / 'collected_static'
 
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -176,4 +171,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
 
-VALIDATORS = {'more_than_one': validators.MinValueValidator(1)}
+### Настройки значений валидации ###
+MIN_AMOUNT = 1
+MIN_COOKING_TIME = 1
+####################################
+
+### Настройки файлов PDF ###
+class PDFSettings:
+    FONT_NAME = 'Liberation Serif'
+    FONT_SYSTEM_NAME = 'LiberationSerif-Regular.ttf'
+    FONT_SIZE = 14
+    TITLE_X = 200
+    TITLE_Y = 800
+    FISRT_STRING_X = 100
+    FIRST_STRING_Y = 750
+    STRING_OFFSET = 30
+
+SHOPPING_CART_FILENAME = 'Покупки.pdf'
+############################

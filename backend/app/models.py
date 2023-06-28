@@ -1,7 +1,9 @@
 from django.db import models
-from users.models import User
-from foodgram_backend.settings import VALIDATORS
 from colorfield.fields import ColorField
+from django.core import validators
+
+from foodgram_backend.settings import MIN_AMOUNT, MIN_COOKING_TIME
+from users.models import User
 
 
 class Ingredient(models.Model):
@@ -74,7 +76,7 @@ class Recipe(models.Model):
         help_text='Описание',
     )
     cooking_time = models.PositiveSmallIntegerField(
-        validators=(VALIDATORS['more_than_one'],),
+        validators=(validators.MinValueValidator(MIN_COOKING_TIME),),
         verbose_name='Время приготовления (в минутах)',
         help_text='Время приготовления (в минутах)',
     )
@@ -112,7 +114,7 @@ class Composition(models.Model):
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
         help_text='Количество',
-        validators=(VALIDATORS['more_than_one'],),
+        validators=(validators.MinValueValidator(MIN_AMOUNT),),
     )
 
     class Meta:

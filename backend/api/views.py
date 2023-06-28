@@ -1,29 +1,33 @@
+import io
+
 from rest_framework import viewsets, filters, permissions, status
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet
+from djoser.views import UserViewSet, TokenDestroyView
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.decorators import action
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from django.http import FileResponse
 from django.db.models import Sum
+
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-import io
-from rest_framework.decorators import action
 
 from api.serializer import (
     CustomUsersSerializer, ProfileSerializer, RecipeListSerializer,
     IngredientSerializer, TagSerializer, CustomLoginSerializer,
-    CustomLogoutSerializer, CustomUserCreate, RecipeSerializer,
+    CustomUserCreate, RecipeSerializer,
     FavoriteSerializer, ShoppingCartSerializer, SubscriptionsSerializer,
 )
+from api.permission import IsAuthor
+from api.filters import RecipeFilter
 from users.models import User, Follow
 from app.models import (
     Recipe, Ingredient, Tag, Favorite, ShoppingCart, Composition
 )
-from api.permission import IsAuthor
-from api.filters import RecipeFilter
+from foodgram_backend.settings import PDFSettings, SHOPPING_CART_FILENAME
 
 
 class CustomLoginView(TokenObtainPairView):
@@ -32,10 +36,9 @@ class CustomLoginView(TokenObtainPairView):
     serializer_class = CustomLoginSerializer
 
 
-class CustomLogoutView(TokenObtainPairView):
+class CustomLogoutView(TokenDestroyView):
     """View класс выхода из приложения."""
     permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = CustomLogoutSerializer
 
 
 class CustomUsersViewSet(UserViewSet):
@@ -81,7 +84,13 @@ class SubscribesViewSet(viewsets.GenericViewSet,
 
     def create(self, request, *args, **kwargs):
         """Подписаться на пользователя."""
-        author = get_object_or_404(User, pk=kwargs['id'])
+        pk = kwargs.get('id', None)
+        if pk is None:
+            return Response(
+                'Ошибка подписи',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        author = get_object_or_404(User, pk=pk)
         queryset = Follow.objects.filter(user=request.user, author=author)
         if queryset.exists() or request.user == author:
             return Response(
@@ -95,7 +104,13 @@ class SubscribesViewSet(viewsets.GenericViewSet,
     @action(methods=('delete',), detail=False)
     def delete(self, request, *args, **kwargs):
         """Отписаться от пользователя."""
-        author = get_object_or_404(User, pk=kwargs['id'])
+        pk = kwargs.get('id', None)
+        if pk is None:
+            return Response(
+                'Ошибка отписки',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        author = get_object_or_404(User, pk=pk)
         queryset = Follow.objects.filter(user=request.user, author=author)
         if not queryset.exists():
             return Response(
@@ -159,25 +174,33 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).annotate(amount=Sum('amount'))
         buffer = io.BytesIO()
         pdfmetrics.registerFont(
-            TTFont('Liberation Serif', 'LiberationSerif-Regular.ttf')
+            TTFont(PDFSettings.FONT_NAME, PDFSettings.FONT_SYSTEM_NAME)
         )
         pdf = canvas.Canvas(buffer)
-        pdf.setFont("Liberation Serif", 14)
-        pdf.drawString(200, 800, 'СПИСОК ПОКУПОК')
-        y_position = 750
+        pdf.setFont(PDFSettings.FONT_NAME, PDFSettings.FONT_SIZE)
+        pdf.drawString(
+            PDFSettings.TITLE_X,
+            PDFSettings.TITLE_Y,
+            'СПИСОК ПОКУПОК'
+        )
+        y_position = PDFSettings.FIRST_STRING_Y
         for shopping_ingredient in shopping_cart:
             pdf.drawString(
-                100,
+                PDFSettings.FISRT_STRING_X,
                 y_position,
                 (f'{shopping_ingredient["ingredient__name"]} '
                  f'({shopping_ingredient["ingredient__measurement_unit"]})'
                  f' - [{shopping_ingredient["amount"]}]')
             )
-            y_position -= 30
+            y_position -= PDFSettings.STRING_OFFSET
         pdf.showPage()
         pdf.save()
         buffer.seek(0)
-        return FileResponse(buffer, as_attachment=True, filename="Покупки.pdf")
+        return FileResponse(
+            buffer,
+            as_attachment=True,
+            filename=SHOPPING_CART_FILENAME
+        )
 
 
 class IngredientViewSet(viewsets.GenericViewSet,
@@ -212,13 +235,24 @@ class FavoriteViewSet(viewsets.GenericViewSet,
     permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
-        recipe = get_object_or_404(Recipe, pk=self.kwargs['id'])
+        pk = self.kwargs.get('id', None)
+        if pk is None:
+            raise ValidationError(
+                'Ошибка создания рецепта',
+            )
+        recipe = get_object_or_404(Recipe, pk=pk)
         serializer.save(user=self.request.user, recipe=recipe)
 
     def create(self, request, *args, **kwargs):
+        pk = kwargs.get('id', None)
+        if pk is None:
+            return Response(
+                'Ошибка поиска рецепта',
+                status=status.HTTP_400_BAD_REQUEST
+            )
         queryset = Favorite.objects.filter(
             user=request.user,
-            recipe=get_object_or_404(pk=kwargs['id'])
+            recipe=get_object_or_404(pk=pk)
         )
         if queryset.exists():
             return Response(
@@ -229,8 +263,14 @@ class FavoriteViewSet(viewsets.GenericViewSet,
 
     @action(methods=('delete',), detail=False)
     def delete(self, request, *args, **kwargs):
+        pk = kwargs.get('id', None)
+        if pk is None:
+            return Response(
+                'Ошибка поиска рецепта',
+                status=status.HTTP_400_BAD_REQUEST
+            )
         queryset = Favorite.objects.filter(
-            recipe=kwargs['id'],
+            recipe=pk,
             user=request.user
         )
         if not queryset.exists():
@@ -251,11 +291,22 @@ class ShoppingCartViewSet(viewsets.GenericViewSet,
     permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
-        recipe = get_object_or_404(Recipe, pk=self.kwargs['id'])
+        pk = self.kwargs.get('id', None)
+        if pk is None:
+            raise ValidationError(
+                'Ошибка поиска рецепта',
+            )
+        recipe = get_object_or_404(Recipe, pk=pk)
         serializer.save(user=self.request.user, recipe=recipe)
 
     def create(self, request, *args, **kwargs):
-        recipe = get_object_or_404(Recipe, pk=kwargs['id'])
+        pk = kwargs.get('id', None)
+        if pk is None:
+            return Response(
+                'Ошибка поиска рецепта',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        recipe = get_object_or_404(Recipe, pk=pk)
         queryset = ShoppingCart.objects.filter(
             user=request.user,
             recipe=recipe
@@ -269,9 +320,15 @@ class ShoppingCartViewSet(viewsets.GenericViewSet,
 
     @action(methods=('delete',), detail=False)
     def delete(self, request, *args, **kwargs):
+        pk = kwargs.get('id', None)
+        if pk is None:
+            return Response(
+                'Ошибка поиска рецепта',
+                status=status.HTTP_400_BAD_REQUEST
+            )
         queryset = ShoppingCart.objects.filter(
             user=request.user,
-            recipe=kwargs['id'],
+            recipe=pk,
         )
         if not queryset.exists():
             return Response(

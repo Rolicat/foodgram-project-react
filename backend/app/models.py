@@ -199,4 +199,4 @@ class Favorite(models.Model):
         )
 
     def __str__(self) -> str:
-        return f'{self.user} хочет купить {self.recipe}.'
+        return f'Пользователю {self.user} нравится {self.recipe}.'

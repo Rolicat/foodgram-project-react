@@ -2,6 +2,7 @@ import io
 
 from rest_framework import viewsets, filters, permissions, status
 from rest_framework.response import Response
+from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet, TokenDestroyView
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -131,6 +132,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsAuthor)
+    pagination_class = LimitOffsetPagination
     http_method_names = ('get', 'post', 'delete', 'patch')
 
     def perform_create(self, serializer):

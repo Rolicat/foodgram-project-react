@@ -15,6 +15,7 @@ from django.db.models import Sum
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.rl_config import TTFSearchPath
 
 from api.serializer import (
     CustomUsersSerializer, ProfileSerializer, RecipeListSerializer,
@@ -28,7 +29,9 @@ from users.models import User, Follow
 from app.models import (
     Recipe, Ingredient, Tag, Favorite, ShoppingCart, Composition
 )
-from foodgram_backend.settings import PDFSettings, SHOPPING_CART_FILENAME
+from foodgram_backend.settings import (
+    PDFSettings, SHOPPING_CART_FILENAME, BASE_DIR
+)
 
 
 class CustomLoginView(TokenObtainPairView):
@@ -194,6 +197,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'ingredient__name', 'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
         buffer = io.BytesIO()
+        TTFSearchPath.append(BASE_DIR / 'fonts')
         pdfmetrics.registerFont(
             TTFont(PDFSettings.FONT_NAME, PDFSettings.FONT_SYSTEM_NAME)
         )

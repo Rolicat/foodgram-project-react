@@ -13,7 +13,7 @@ class RecipeFilter(FilterSet):
     tags = CharFilter(field_name='tags__slug')
 
     def filter_boolean(self, queryset, name, value):
-        """Т.к. нам приходит 0 или 1, мы меняем на true или false."""
+        """Фильтруем shopping_cart и favorited."""
         if value:
             return queryset.filter(
                 **{'__'.join((name, 'user')): self.request.user}

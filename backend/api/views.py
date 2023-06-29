@@ -271,7 +271,7 @@ class FavoriteViewSet(viewsets.GenericViewSet,
             )
         queryset = Favorite.objects.filter(
             user=request.user,
-            recipe=get_object_or_404(pk=pk)
+            recipe=get_object_or_404(Recipe, pk=pk)
         )
         if queryset.exists():
             return Response(

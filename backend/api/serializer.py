@@ -209,7 +209,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     )
 
     def validate_cooking_time(self, cooking_time: int):
-        if cooking_time < MIN_COOKING_TIME:
+        if int(cooking_time) < MIN_COOKING_TIME:
             raise serializers.ValidationError(
                 f'Время готовки не может быть менее {MIN_COOKING_TIME} минуты'
             )
@@ -232,7 +232,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                     'В рецепте есть повторяющиеся ингредиенты'
                 )
             reply_check[ingredient['id']] = ingredient['amount']
-            if ingredient['amount'] < MIN_AMOUNT:
+            if int(ingredient['amount']) < MIN_AMOUNT:
                 raise serializers.ValidationError(
                     f'Количество ингредиентов не может '
                     f'быть меньше {MIN_AMOUNT}'

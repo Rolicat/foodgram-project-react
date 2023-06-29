@@ -130,7 +130,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeListSerializer
     filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
-    permission_classes = (permissions.AllowAny, IsAuthor)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsAuthor)
     http_method_names = ('get', 'post', 'delete', 'patch')
 
     def perform_create(self, serializer):

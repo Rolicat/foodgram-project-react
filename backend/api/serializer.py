@@ -195,7 +195,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания рецепта."""
+    """Сериализатор для создания/обновления рецепта."""
     image = Base64ImageField(required=False, allow_null=True)
     tags = serializers.PrimaryKeyRelatedField(
         required=True,
@@ -250,6 +250,35 @@ class RecipeSerializer(serializers.ModelSerializer):
                 tag=tag
             ) for tag in tags]
         )
+        Composition.objects.bulk_create(
+            [Composition(
+                recipe=recipe,
+                ingredient=get_object_or_404(
+                    Ingredient,
+                    pk=ingredient_info['id']
+                ),
+                amount=ingredient_info['amount'],
+            ) for ingredient_info in ingredients]
+        )
+        return recipe
+
+    def update(self, recipe, validated_data):
+        """Обновление рецепта."""
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        Recipe.objects.filter(pk=recipe.id).update(**validated_data)
+        # Сперва удалим все привязки тегов
+        TagList.objects.filter(recipe=recipe).delete()
+        # Добавим теги вновь
+        TagList.objects.bulk_create(
+            [TagList(
+                recipe=recipe,
+                tag=tag
+            ) for tag in tags]
+        )
+        # Сперва удалим все привязки ингредиентов
+        Composition.objects.filter(recipe=recipe).delete()
+        # Добавим ингредиенты вновь
         Composition.objects.bulk_create(
             [Composition(
                 recipe=recipe,

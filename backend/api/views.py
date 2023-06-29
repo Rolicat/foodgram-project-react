@@ -153,6 +153,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
             headers=headers
         )
 
+    def perform_update(self, serializer):
+        """Возвращаем полученный рецепт."""
+        return serializer.save()
+
+    def update(self, request, *args, **kwargs):
+        """Обновляем рецепт с подменой сериализатора на возврат."""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = self.perform_update(serializer)
+        serializer = RecipeListSerializer(
+            instance=instance,
+            context={'request': request},
+        )
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )
+
     def get_serializer_class(self):
         """Меняем сериализатор в зависимости от запроса."""
         if self.action in ('list', 'retrieve'):

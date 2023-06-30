@@ -48,7 +48,7 @@ class CustomLogoutView(TokenDestroyView):
 class CustomUsersViewSet(UserViewSet):
     """View-crud класс для пользователя(ей)."""
     queryset = User.objects.all()
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     search_fields = ('username', )
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
 
@@ -197,7 +197,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'ingredient__name', 'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
         buffer = io.BytesIO()
-        TTFSearchPath.append(BASE_DIR / 'fonts')
+        TTFSearchPath.append(BASE_DIR / 'foodgram_backend/fonts')
         pdfmetrics.registerFont(
             TTFont(PDFSettings.FONT_NAME, PDFSettings.FONT_SYSTEM_NAME)
         )

@@ -12,9 +12,11 @@ class RecipeAdmin(admin.ModelAdmin):
     empty_value_display = EMPTY_FIELD_VALUE
     list_display = ('pk', 'name', 'text', 'cooking_time',
                     'pub_date', 'author',)
-    search_fields = ('text',)
     list_editable = ('author', 'cooking_time',)
-    list_filter = ('pub_date', 'cooking_time',)
+    search_fields = (
+        'name', 'author__email', 'author__username'
+    )
+    list_filter = ('pub_date', 'cooking_time', 'tags')
 
 
 class IngredientAdmin(admin.ModelAdmin):
@@ -22,6 +24,7 @@ class IngredientAdmin(admin.ModelAdmin):
     empty_value_display = EMPTY_FIELD_VALUE
     list_display = ('pk', 'name', 'measurement_unit',)
     search_fields = ('name',)
+    list_filter = ('measurement_unit',)
 
 
 class TagAdmin(admin.ModelAdmin):
@@ -35,25 +38,40 @@ class CompositionAdmin(admin.ModelAdmin):
     """Админка для ингредиентов в составе рецепта."""
     empty_value_display = EMPTY_FIELD_VALUE
     list_display = ('pk', 'recipe', 'ingredient', 'amount')
-    search_fields = ('recipe',)
+    search_fields = (
+        'recipe__name', 'recipe__author__email', 'recipe__author__username'
+    )
+    list_filter = ('recipe__tags',)
 
 
 class TagListAdmin(admin.ModelAdmin):
     """Админка для тегов у рецепта."""
     empty_value_display = EMPTY_FIELD_VALUE
     list_display = ('pk', 'recipe', 'tag',)
+    search_fields = (
+        'recipe__name', 'recipe__author__email', 'recipe__author__username'
+    )
+    list_filter = ('tag',)
 
 
 class ShoppingCartAdmin(admin.ModelAdmin):
     """Админка корзины покупок"""
     empty_value_display = EMPTY_FIELD_VALUE
     list_display = ('pk', 'user', 'recipe')
+    search_fields = (
+        'recipe__name', 'recipe__author__email', 'recipe__author__username'
+    )
+    list_filter = ('recipe__tags',)
 
 
 class FavoriteAdmin(admin.ModelAdmin):
     """Админка избранного"""
     empty_value_display = EMPTY_FIELD_VALUE
     list_display = ('pk', 'user', 'recipe')
+    search_fields = (
+        'recipe__name', 'recipe__author__email', 'recipe__author__username'
+    )
+    list_filter = ('recipe__tags',)
 
 
 admin.site.register(Recipe, RecipeAdmin)

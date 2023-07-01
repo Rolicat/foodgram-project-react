@@ -234,8 +234,10 @@ class RecipeSerializer(serializers.ModelSerializer):
             reply_check[ingredient['id']] = ingredient['amount']
             if int(ingredient['amount']) < MIN_AMOUNT:
                 raise serializers.ValidationError(
-                    f'Количество ингредиентов не может '
-                    f'быть меньше {MIN_AMOUNT}'
+                    [{'amount': [(
+                        f'Количество ингредиентов не может '
+                        f'быть меньше {MIN_AMOUNT}'
+                    )]}]
                 )
         return ingredients
 

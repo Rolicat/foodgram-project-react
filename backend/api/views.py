@@ -24,7 +24,7 @@ from api.serializer import (
     FavoriteSerializer, ShoppingCartSerializer, SubscriptionsSerializer,
 )
 from api.permission import IsAuthor
-from api.filters import RecipeFilter
+from api.filters import RecipeFilter, IngredientFilter
 from users.models import User, Follow
 from app.models import (
     Recipe, Ingredient, Tag, Favorite, ShoppingCart, Composition
@@ -132,7 +132,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """View-crud класс для рецептов."""
     queryset = Recipe.objects.all()
     serializer_class = RecipeListSerializer
-    filter_backends = (DjangoFilterBackend, )
+    filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsAuthor)
     pagination_class = LimitOffsetPagination
@@ -236,8 +236,8 @@ class IngredientViewSet(viewsets.GenericViewSet,
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
     permission_classes = (permissions.AllowAny,)
 
 

@@ -2,8 +2,16 @@ from django_filters.rest_framework import (
     FilterSet, CharFilter, BooleanFilter, ModelChoiceFilter,
 )
 
-from app.models import Recipe
+from app.models import Recipe, Ingredient
 from users.models import User
+
+
+class IngredientFilter(FilterSet):
+    name = CharFilter(lookup_expr='startswith')
+
+    class Meta:
+        model = Ingredient
+        fields = ('name',)
 
 
 class RecipeFilter(FilterSet):
